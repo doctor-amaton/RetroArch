@@ -82,9 +82,6 @@ struct shader_uniforms_frame
 
 struct shader_uniforms
 {
-#if defined(VITA)
-   int time;
-#endif
    int mvp;
    int tex_coord;
    int vertex_coord;
@@ -115,20 +112,6 @@ static const char *glsl_prefixes[] = {
    "ruby",
 };
 
-#if defined(VITA)
-#include "../drivers/gl_shaders/modern_opaque.cg.vert.h"
-#include "../drivers/gl_shaders/modern_opaque.cg.frag.h"
-#include "../drivers/gl_shaders/modern_alpha_blend.cg.vert.h"
-#include "../drivers/gl_shaders/modern_alpha_blend.cg.frag.h"
-
-#ifdef HAVE_SHADERPIPELINE
-#include "../drivers/gl_shaders/modern_pipeline_xmb_ribbon_simple.cg.vert.h"
-#include "../drivers/gl_shaders/pipeline_xmb_ribbon_simple.cg.frag.h"
-#include "../drivers/gl_shaders/modern_pipeline_xmb_ribbon.cg.vert.h"
-#include "../drivers/gl_shaders/pipeline_xmb_ribbon.cg.frag.h"
-#endif
-
-#else
 #include "../drivers/gl_shaders/modern_opaque.glsl.vert.h"
 #include "../drivers/gl_shaders/modern_opaque.glsl.frag.h"
 #include "../drivers/gl_shaders/core_opaque.glsl.vert.h"
@@ -160,7 +143,6 @@ static const char *glsl_prefixes[] = {
 #include "../drivers/gl_shaders/pipeline_xmb_ribbon.glsl.frag.h"
 #include "../drivers/gl_shaders/pipeline_bokeh.glsl.frag.h"
 #include "../drivers/gl_shaders/pipeline_snowflake.glsl.frag.h"
-#endif
 #endif
 
 typedef struct glsl_shader_data
@@ -287,7 +269,7 @@ static const XXH64_hash_t gl_glsl_hash_shader(
    {
       XXH64_update(state, source[n], strlen(source[n]));
    }
-   
+
    XXH64_hash_t const hash = XXH64_digest(state);
 
    XXH64_freeState(state);
@@ -417,10 +399,10 @@ static bool gl_glsl_compile_shader(glsl_shader_data_t *glsl,
    source[2] = glsl->alias_define;
    source[3] = program;
 
-#if defined(ORBIS) 
+#if defined(ORBIS)
    {
       char save_path[250];
-      XXH64_hash_t const hash = 
+      XXH64_hash_t const hash =
          gl_glsl_hash_shader(source, ARRAY_SIZE(source));
       snprintf(save_path, sizeof(save_path),
             "/data/retroarch/temp/%lx.sb", hash);
@@ -468,7 +450,7 @@ static bool gl_glsl_compile_program(
       struct shader_program_info *program_info)
 {
    glsl_shader_data_t                 *glsl = (glsl_shader_data_t*)data;
-   struct shader_program_glsl_data *program = 
+   struct shader_program_glsl_data *program =
       (struct shader_program_glsl_data*)program_data;
    GLuint prog                              = glCreateProgram();
 
@@ -527,11 +509,7 @@ static bool gl_glsl_compile_program(
       program->fprg = 0;
 
       glUseProgram(prog);
-#if defined(VITA)
-      glUniform1i(gl_glsl_get_uniform(glsl, prog, "vTexture"), 0);
-#else
       glUniform1i(gl_glsl_get_uniform(glsl, prog, "Texture"), 0);
-#endif
       glUseProgram(0);
    }
 
@@ -733,9 +711,6 @@ static void gl_glsl_find_uniforms(glsl_shader_data_t *glsl,
 
    glUseProgram(prog);
 
-#if defined(VITA)
-   uni->time            = gl_glsl_get_uniform(glsl, prog, "Time");
-#endif
    uni->mvp             = gl_glsl_get_uniform(glsl, prog, "MVPMatrix");
    uni->tex_coord       = gl_glsl_get_attrib(glsl, prog, "TexCoord");
    uni->vertex_coord    = gl_glsl_get_attrib(glsl, prog, "VertexCoord");
@@ -874,10 +849,6 @@ static void gl_glsl_init_menu_shaders(void *data)
       return;
 
 #ifdef HAVE_OPENGLES
-#if defined(VITA)
-   shader_prog_info.vertex = stock_vertex_xmb_ribbon_modern;
-   shader_prog_info.fragment = stock_fragment_xmb;
-#else
    if (gl_query_extension("GL_OES_standard_derivatives"))
    {
       shader_prog_info.vertex = glsl_core ? stock_vertex_xmb_ribbon_modern : stock_vertex_xmb_ribbon_legacy;
@@ -888,7 +859,6 @@ static void gl_glsl_init_menu_shaders(void *data)
       shader_prog_info.vertex = stock_vertex_xmb_ribbon_simple_legacy;
       shader_prog_info.fragment = stock_fragment_xmb_ribbon_simple;
    }
-#endif
 #else
    shader_prog_info.vertex = glsl_core ? stock_vertex_xmb_ribbon_modern : stock_vertex_xmb_ribbon_legacy;
    shader_prog_info.fragment = glsl_core ? core_stock_fragment_xmb : stock_fragment_xmb;
@@ -921,7 +891,6 @@ static void gl_glsl_init_menu_shaders(void *data)
    gl_glsl_find_uniforms(glsl, 0, glsl->prg[VIDEO_SHADER_MENU_2].id,
          &glsl->uniforms[VIDEO_SHADER_MENU_2]);
 
-#if !defined(VITA)
 #if defined(HAVE_OPENGLES)
    shader_prog_info.vertex   = stock_vertex_xmb_snow;
    shader_prog_info.fragment = stock_fragment_xmb_simple_snow;
@@ -989,7 +958,6 @@ static void gl_glsl_init_menu_shaders(void *data)
          &shader_prog_info);
    gl_glsl_find_uniforms(glsl, 0, glsl->prg[VIDEO_SHADER_MENU_6].id,
          &glsl->uniforms[VIDEO_SHADER_MENU_6]);
-#endif
 #endif
 }
 
@@ -1076,23 +1044,14 @@ static void *gl_glsl_init(void *data, const char *path)
       {
          RARCH_WARN("[GL]: Stock GLSL shaders will be used.\n");
          glsl->shader->passes = 1;
-#if defined(VITA)
-         glsl->shader->pass[0].source.string.vertex   = strdup(stock_vertex_modern);
-         glsl->shader->pass[0].source.string.fragment = strdup(stock_fragment_modern);
-#else
          glsl->shader->pass[0].source.string.vertex   =
             strdup(glsl_core ? stock_vertex_core : stock_vertex_modern);
          glsl->shader->pass[0].source.string.fragment =
             strdup(glsl_core ? stock_fragment_core : stock_fragment_modern);
-#endif
          glsl->shader->flags |= SHDR_FLAG_MODERN;
       }
    }
 
-#if defined(VITA)
-    stock_vertex = stock_vertex_modern;
-    stock_fragment = stock_fragment_modern;
-#else
    stock_vertex = (glsl->shader->flags & SHDR_FLAG_MODERN) ?
       stock_vertex_modern : stock_vertex_legacy;
    stock_fragment = (glsl->shader->flags & SHDR_FLAG_MODERN) ?
@@ -1103,7 +1062,6 @@ static void *gl_glsl_init(void *data, const char *path)
       stock_vertex = stock_vertex_core;
       stock_fragment = stock_fragment_core;
    }
-#endif
 
 #ifdef HAVE_OPENGLES
    if (!(glsl->shader->flags & SHDR_FLAG_MODERN))
@@ -1112,7 +1070,7 @@ static void *gl_glsl_init(void *data, const char *path)
       goto error;
    }
 #else
-   if (      glsl_core 
+   if (      glsl_core
          && (!(glsl->shader->flags & SHDR_FLAG_MODERN)))
    {
       RARCH_ERR("[GL]: GL core context is used, but shader is not core compatible. Cannot use it.\n");
@@ -1173,17 +1131,12 @@ static void *gl_glsl_init(void *data, const char *path)
 
    if (glsl->shader->flags & SHDR_FLAG_MODERN)
    {
-#if defined(VITA)
-      shader_prog_info.vertex   = stock_vertex_modern_blend;
-      shader_prog_info.fragment = stock_fragment_modern_blend;
-#else
       shader_prog_info.vertex   =
             glsl_core ?
             stock_vertex_core_blend : stock_vertex_modern_blend;
       shader_prog_info.fragment =
             glsl_core ?
             stock_fragment_core_blend : stock_fragment_modern_blend;
-#endif
       shader_prog_info.is_file  = false;
 
       gl_glsl_compile_program(
@@ -1545,7 +1498,7 @@ static bool gl_glsl_set_mvp(void *shader_data, const void *mat_data)
    int loc;
    glsl_shader_data_t *glsl   = (glsl_shader_data_t*)shader_data;
 
-   if (      !glsl 
+   if (      !glsl
          || (!(glsl->shader->flags & SHDR_FLAG_MODERN)))
       return false;
 
@@ -1589,7 +1542,7 @@ static bool gl_glsl_set_coords(void *shader_data,
    const struct shader_uniforms *uni = glsl
       ? &glsl->uniforms[glsl->active_idx] : NULL;
 
-   if (     !glsl 
+   if (     !glsl
          || (!(glsl->shader->flags & SHDR_FLAG_MODERN))
          || !coords)
    {
@@ -1615,14 +1568,6 @@ static bool gl_glsl_set_coords(void *shader_data,
       if (!buffer)
          return false;
    }
-
-#if defined(VITA)
-   if (uni->time >= 0)
-   {
-      float t = (sceKernelGetSystemTimeWide()) / (scePowerGetArmClockFrequency() * 1000.0);
-      glUniform1f(uni->time, t);
-   }
-#endif
 
    if (uni->tex_coord >= 0)
    {

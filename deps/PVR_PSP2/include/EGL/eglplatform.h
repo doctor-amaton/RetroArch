@@ -17,7 +17,7 @@
  *                King's Langley, Hertfordshire, WD4 8LZ, U.K.
  *
  * Description  : Type definitions exported by Khronos EGL.
- * 
+ *
  * Platform     : ALL
  *
  * $Log: drveglplatform.h $
@@ -30,6 +30,10 @@
 
 #if !defined(IMG_EXPORT)
 #define	IMG_EXPORT
+#endif
+
+#if !defined(SceUID)
+#define SceUID uint32_t
 #endif
 
 /* Windows calling convention boilerplate */

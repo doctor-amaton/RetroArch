@@ -28,6 +28,7 @@
 #include <psp2/sysmodule.h>
 #include <psp2/appmgr.h>
 #include <psp2/apputil.h>
+#include <gpu_es4/psp2_pvr_hint.h>
 
 #include "../../bootstrap/vita/sbrk.c"
 
@@ -66,10 +67,6 @@
 
 #if defined(PSP) && defined(HAVE_KERNEL_PRX)
 #include "../../bootstrap/psp1/kernel_functions.h"
-#endif
-
-#if defined(HAVE_VITAGLES)
-#include "../../deps/Pigs-In-A-Blanket/include/pib.h"
 #endif
 
 #ifndef VITA
@@ -263,16 +260,20 @@ static void frontend_psp_init(void *data)
    scePowerSetGpuClockFrequency(222);
    scePowerSetGpuXbarClockFrequency(166);
    sceSysmoduleLoadModule(SCE_SYSMODULE_NET);
+   sceKernelLoadStartModule("app0:libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
+   sceKernelLoadStartModule("app0:libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
+   sceKernelLoadStartModule("app0:libGLESv1_CM.suprx", 0, NULL, 0, NULL, NULL);
+   sceKernelLoadStartModule("app0:libGLESv2.suprx", 0, NULL, 0, NULL, NULL);
 
    SceAppUtilInitParam appUtilParam;
    SceAppUtilBootParam appUtilBootParam;
    memset(&appUtilParam, 0, sizeof(SceAppUtilInitParam));
    memset(&appUtilBootParam, 0, sizeof(SceAppUtilBootParam));
    sceAppUtilInit(&appUtilParam, &appUtilBootParam);
-#if defined(HAVE_VITAGLES)
-   if (pibInit(PIB_SHACCCG|PIB_ENABLE_MSAA|PIB_GET_PROC_ADDR_CORE))
-      return;
-#endif
+
+   PVRSRV_PSP2_APPHINT hint;
+   PVRSRVInitializeAppHint(&hint);
+   PVRSRVCreateVirtualAppHint(&hint);
 #else
    /* initialize debug screen */
    pspDebugScreenInit();
