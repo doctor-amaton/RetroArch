@@ -255,15 +255,17 @@ static void frontend_psp_init(void *data)
 #ifndef IS_SALAMANDER
 
 #ifdef VITA
+   sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
+   sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
+   sceKernelLoadStartModule("app0:libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
+   sceKernelLoadStartModule("app0:libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
+   sceKernelLoadStartModule("app0:module/libGLESv2.suprx", 0, NULL, 0, NULL, NULL);
+
    scePowerSetArmClockFrequency(444);
    scePowerSetBusClockFrequency(222);
    scePowerSetGpuClockFrequency(222);
    scePowerSetGpuXbarClockFrequency(166);
    sceSysmoduleLoadModule(SCE_SYSMODULE_NET);
-   sceKernelLoadStartModule("app0:libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
-   sceKernelLoadStartModule("app0:libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
-   sceKernelLoadStartModule("app0:libGLESv1_CM.suprx", 0, NULL, 0, NULL, NULL);
-   sceKernelLoadStartModule("app0:libGLESv2.suprx", 0, NULL, 0, NULL, NULL);
 
    SceAppUtilInitParam appUtilParam;
    SceAppUtilBootParam appUtilBootParam;

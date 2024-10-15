@@ -13,11 +13,14 @@ endif
 PREFIX  = arm-vita-eabi
 CC      = $(PREFIX)-gcc
 
-INCDIR = libretro-common/include
-CFLAGS = -Wl,-q $(OPTIMIZE_LV) -I$(INCDIR) -std=gnu99 -mfloat-abi=hard -ffast-math -fsingle-precision-constant -mword-relocations
+INCDIRS :=
+INCDIRS += -Ilibretro-common/include \
+	-I./deps/PVR_PSP2/include
+
+CFLAGS = -Wl,-q $(OPTIMIZE_LV) $(INCDIRS) -std=gnu99 -mfloat-abi=hard -ffast-math -fsingle-precision-constant -mword-relocations
 ASFLAGS = $(CFLAGS)
 
-RARCH_DEFINES = -DVITA -DIS_SALAMANDER -DRARCH_CONSOLE
+RARCH_DEFINES = -DVITA -DIS_SALAMANDER -DRARCH_CONSOLE -D__psp2__
 
 LIBDIR =
 LDFLAGS =
@@ -35,7 +38,6 @@ LIBS = -lSceDisplay_stub \
 	-lSceRtc_stub \
 	-lSceCommonDialog_stub \
 	-lScePgf_stub \
-	-lSceMotion_stub \
 	-lSceMotion_stub \
 	-lSceAppMgr_stub \
 	-lfreetype \

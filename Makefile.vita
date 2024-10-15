@@ -14,7 +14,7 @@ PC_DEVELOPMENT_UDP_PORT   =
 OBJ :=
 
 SCE_LIBC_SIZE := 4194304
-DEFINES := -DHAVE_ONLINE_UPDATER -DHAVE_UPDATE_ASSETS -DHAVE_STB_VORBIS
+DEFINES := -DHAVE_ONLINE_UPDATER -DHAVE_UPDATE_ASSETS -DHAVE_STB_VORBIS -D__psp2__
 INCDIRS :=
 
 ifeq ($(GRIFFIN_BUILD), 1)
@@ -36,7 +36,7 @@ ifeq ($(GRIFFIN_BUILD), 1)
 		-DHAVE_RBMP \
 		-DHAVE_RTGA \
 		-DHAVE_CC_RESAMPLER \
-		-DHAVE_CORE_INFO_CACHE
+		-DHAVE_CORE_INFO_CACHE \
 
 	ifeq ($(DEBUG), 1)
 		DEFINES += -DHAVE_NETLOGGER
@@ -49,6 +49,7 @@ ifeq ($(GRIFFIN_BUILD), 1)
 		-Ideps/stb
 
 else
+	__psp2__					 := 1
 	HAVE_REWIND           := 1
 	HAVE_UPDATE_ASSETS    := 1
 	HAVE_ONLINE_UPDATER   := 1
@@ -81,7 +82,7 @@ else
 	HAVE_GFX_WIDGETS          := 1
 	HAVE_CONFIGFILE           := 1
 	HAVE_PATCH                := 1
-	HAVE_XDELTA               := 1 # disabled because <lzma.h> isn't available (or we haven't figured out how to install it)
+	HAVE_XDELTA               := 0
 	HAVE_CHEATS               := 1
 	HAVE_OVERLAY              := 1
 	HAVE_MATERIALUI           := 1
@@ -186,12 +187,13 @@ VITA_LIBS := -lSceDisplay_stub \
 	-lpng \
 	-lz \
 	-lSceShaccCg_stub \
+	-ltaihen_stub \
 	-llibGLESv1_CM_stub_weak \
 	-llibGLESv2_stub_weak \
 	-llibgpu_es4_ext_stub_weak \
 	-llibIMGEGL_stub_weak
 
-FSELF_FLAGS := -ss
+FSELF_FLAGS := -s
 LIBS	:= $(WHOLE_START)
 
 ifeq ($(HAVE_STATIC_DUMMY),1)
@@ -243,8 +245,9 @@ $(TARGET).elf: $(OBJ)
 %.vpk: %.self
 	vita-mksfoex -s TITLE_ID=$(VITA_TITLE_ID) "$(VITA_TITLE_NAME)" -d ATTRIBUTE2=12 param.sfo
 	vita-pack-vpk -s param.sfo -b $< $@ \
-		-a deps/PVR_PSP2/lib/libGLESv1_CM.suprx=libGLESv1_CM.suprx \
-		-a deps/PVR_PSP2/lib/libGLESv2.suprx=libGLESv2.suprx \
+		-a deps/PVR_PSP2/lib/libGLESv1_CM.suprx=module/libGLESv1_CM.suprx \
+		-a deps/PVR_PSP2/lib/libGLESv2.suprx=module/libGLESv2.suprx \
+		-a deps/PVR_PSP2/lib/libpvrPSP2_WSEGL.suprx=module/libpvrPSP2_WSEGL.suprx \
 		-a deps/PVR_PSP2/lib/libgpu_es4_ext.suprx=libgpu_es4_ext.suprx \
 		-a deps/PVR_PSP2/lib/libIMGEGL.suprx=libIMGEGL.suprx
 
