@@ -32,9 +32,7 @@
 #define	IMG_EXPORT
 #endif
 
-#if !defined(SceUID)
-#define SceUID uint32_t
-#endif
+#include <psp2common/types.h>
 
 /* Windows calling convention boilerplate */
 

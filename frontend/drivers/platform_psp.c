@@ -26,6 +26,7 @@
 #include <psp2/system_param.h>
 #include <psp2/power.h>
 #include <psp2/sysmodule.h>
+#include <psp2/kernel/modulemgr.h>
 #include <psp2/appmgr.h>
 #include <psp2/apputil.h>
 #include <gpu_es4/psp2_pvr_hint.h>
@@ -255,12 +256,6 @@ static void frontend_psp_init(void *data)
 #ifndef IS_SALAMANDER
 
 #ifdef VITA
-   sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
-   sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
-   sceKernelLoadStartModule("app0:libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
-   sceKernelLoadStartModule("app0:libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
-   sceKernelLoadStartModule("app0:module/libGLESv2.suprx", 0, NULL, 0, NULL, NULL);
-
    scePowerSetArmClockFrequency(444);
    scePowerSetBusClockFrequency(222);
    scePowerSetGpuClockFrequency(222);
@@ -272,10 +267,6 @@ static void frontend_psp_init(void *data)
    memset(&appUtilParam, 0, sizeof(SceAppUtilInitParam));
    memset(&appUtilBootParam, 0, sizeof(SceAppUtilBootParam));
    sceAppUtilInit(&appUtilParam, &appUtilBootParam);
-
-   PVRSRV_PSP2_APPHINT hint;
-   PVRSRVInitializeAppHint(&hint);
-   PVRSRVCreateVirtualAppHint(&hint);
 #else
    /* initialize debug screen */
    pspDebugScreenInit();

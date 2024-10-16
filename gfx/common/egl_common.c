@@ -507,6 +507,7 @@ bool egl_init_context_common(
       void *display_data)
 {
    EGLint i;
+   EGLint error;
    EGLint matched     = 0;
    EGLConfig *configs = NULL;
    if (!egl)
@@ -522,8 +523,11 @@ bool egl_init_context_common(
    if (!configs)
       return false;
 
-   if (!_egl_choose_config(egl->dpy, attrib_ptr,
-            configs, *count, &matched) || !matched)
+   RARCH_LOG("[EGL]: Configurations found: %d.\n", *count);
+
+   error = _egl_choose_config(egl->dpy, attrib_ptr, configs, *count, &matched);
+
+   if (!error || !matched)
    {
       RARCH_ERR("[EGL]: No EGL configs with appropriate attributes.\n");
       return false;

@@ -4280,10 +4280,12 @@ static void *gl2_init(const video_info_t *video,
       win_height = settings->uints.video_fullscreen_y;
    }
 
-   if (     !gl->ctx_driver->set_video_mode
-         || !gl->ctx_driver->set_video_mode(gl->ctx_data,
-            win_width, win_height, (video->fullscreen || force_fullscreen)))
+   if (!gl->ctx_driver->set_video_mode ||
+       !gl->ctx_driver->set_video_mode(gl->ctx_data, win_width, win_height, (video->fullscreen || force_fullscreen))
+   ) {
       goto error;
+   }
+
 #if defined(__APPLE__) && !defined(IOS) && !defined(HAVE_COCOA_METAL)
    /* This is a hack for now to work around a very annoying
     * issue that currently eludes us. */

@@ -245,26 +245,7 @@ static void gfx_display_gl1_draw(gfx_display_ctx_draw_t *draw,
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-#ifdef VITA
-   {
-      unsigned i;
-      static float *vertices3 = NULL;
-
-      if (vertices3)
-         free(vertices3);
-      vertices3 = (float*)malloc(sizeof(float) * 3 * draw->coords->vertices);
-      for (i = 0; i < draw->coords->vertices; i++)
-      {
-         memcpy(&vertices3[i * 3],
-               &draw->coords->vertex[i * 2],
-               sizeof(float) * 2);
-         vertices3[i * 3 + 2]  = 0.0f;
-      }
-      glVertexPointer(3, GL_FLOAT, 0, vertices3);
-   }
-#else
    glVertexPointer(2, GL_FLOAT, 0, draw->coords->vertex);
-#endif
 
    glColorPointer(4, GL_FLOAT, 0, draw->coords->color);
    glTexCoordPointer(2, GL_FLOAT, 0, draw->coords->tex_coord);
@@ -469,9 +450,6 @@ static void gl1_raster_font_draw_vertices(
       gl1_raster_t *font,
       const video_coords_t *coords)
 {
-#ifdef VITA
-   static float *vertices3 = NULL;
-#endif
 
    if (font->atlas->dirty)
    {
@@ -491,22 +469,7 @@ static void gl1_raster_font_draw_vertices(
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-#ifdef VITA
-   if (vertices3)
-      free(vertices3);
-   vertices3 = (float*)malloc(sizeof(float) * 3 * coords->vertices);
-   {
-      int i;
-      for (i = 0; i < coords->vertices; i++)
-      {
-         memcpy(&vertices3[i*3], &coords->vertex[i*2], sizeof(float) * 2);
-         vertices3[i*3+2] = 0.0f;
-      }
-   }
-   glVertexPointer(3, GL_FLOAT, 0, vertices3);
-#else
    glVertexPointer(2, GL_FLOAT, 0, coords->vertex);
-#endif
 
    glColorPointer(4, GL_FLOAT, 0, coords->color);
    glTexCoordPointer(2, GL_FLOAT, 0, coords->tex_coord);
@@ -960,9 +923,6 @@ static void *gl1_init(const video_info_t *video,
       input_driver_t **input, void **input_data)
 {
    unsigned full_x, full_y;
-#ifdef VITA
-   static bool vgl_inited               = false;
-#endif
    void *ctx_data                       = NULL;
    const gfx_ctx_driver_t *ctx_driver   = NULL;
    unsigned mode_width                  = 0;
@@ -1035,14 +995,6 @@ static void *gl1_init(const video_info_t *video,
    full_y      = mode_height;
    mode_width  = 0;
    mode_height = 0;
-#ifdef VITA
-   if (!vgl_inited)
-   {
-      vglInitExtended(0x1400000, full_x, full_y, RAM_THRESHOLD, SCE_GXM_MULTISAMPLE_4X);
-      vglUseVram(GL_TRUE);
-      vgl_inited = true;
-   }
-#endif
    /* Clear out potential error flags in case we use cached context. */
    glGetError();
 
@@ -1143,9 +1095,7 @@ static void *gl1_init(const video_info_t *video,
    glDisable(GL_CULL_FACE);
    glDisable(GL_STENCIL_TEST);
    glDisable(GL_SCISSOR_TEST);
-#ifndef VITA
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-#endif
    glGenTextures(1, &gl1->tex);
    glGenTextures(1, &gl1->menu_tex);
 
@@ -1305,10 +1255,8 @@ static void gl1_draw_tex(gl1_t *gl1, int pot_width, int pot_height, int width, i
    /* Multi-texture not part of GL 1.1 */
    /*glActiveTexture(GL_TEXTURE0);*/
 
-#ifndef VITA
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
    glPixelStorei(GL_UNPACK_ROW_LENGTH, pot_width);
-#endif
    glBindTexture(GL_TEXTURE_2D, tex);
 
    frame = (uint8_t*)frame_to_copy;
@@ -1410,11 +1358,9 @@ static void gl1_readback(gl1_t *gl1,
       unsigned alignment, unsigned fmt, unsigned type,
       void *src)
 {
-#ifndef VITA
    glPixelStorei(GL_PACK_ALIGNMENT, alignment);
    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
    glReadBuffer(GL_BACK);
-#endif
    glReadPixels(gl1->vp.x, gl1->vp.y,
          gl1->vp.width, gl1->vp.height,
          (GLenum)fmt, (GLenum)type, (GLvoid*)src);
@@ -1608,17 +1554,7 @@ static bool gl1_frame(void *data, const void *frame,
    if (gl1->flags & GL1_FLAG_MENU_TEXTURE_ENABLE)
    {
       do_swap = true;
-#ifdef VITA
-      glUseProgram(0);
-      bool enabled = glIsEnabled(GL_DEPTH_TEST);
-      if (enabled)
-         glDisable(GL_DEPTH_TEST);
-#endif
       menu_driver_frame(menu_is_alive, video_info);
-#ifdef VITA
-      if (enabled)
-         glEnable(GL_DEPTH_TEST);
-#endif
    }
    else
 #endif

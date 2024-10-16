@@ -15,17 +15,22 @@
  */
 
 /* Vita context. */
-
 #include "../../retroarch.h"
 #include "../common/egl_common.h"
+#include "../../verbosity.h"
 
 #define ATTR_VITA_WIDTH 960
 #define ATTR_VITA_HEIGHT 544
 
+#define SCE_KERNEL_CPU_MASK_SHIFT  (16)
+#define SCE_KERNEL_CPU_MASK_USER_0 (0x01 << SCE_KERNEL_CPU_MASK_SHIFT)
+#define SCE_KERNEL_CPU_MASK_USER_1 (0x02 << SCE_KERNEL_CPU_MASK_SHIFT)
+#define SCE_KERNEL_CPU_MASK_USER_2 (0x04 << SCE_KERNEL_CPU_MASK_SHIFT)
+
 typedef struct
 {
    egl_ctx_data_t egl;
-   int native_window;
+   Psp2NativeWindow* native_window;
    bool resize;
    unsigned width, height;
    float refresh_rate;
@@ -72,23 +77,31 @@ static void vita_destroy(void *data) {
 
 static bool vita_set_video_mode(void *data, unsigned width, unsigned height, bool fullscreen) {
   /* Create an EGL rendering context */
-   static const EGLint
-	   ctx_attr_list[]   = {
+   static const EGLint ctx_attr_list[] = {
       EGL_CONTEXT_CLIENT_VERSION, 2,
       EGL_NONE
    };
 
+   Psp2NativeWindow win;
+   win.type = PSP2_DRAWABLE_TYPE_WINDOW;
+   win.windowSize = PSP2_WINDOW_960X544;
+
+   win.numFlipBuffers = 2;
+   win.flipChainThrdAffinity = SCE_KERNEL_CPU_MASK_USER_1;
+
    vita_ctx_data_t *ctx_vita = (vita_ctx_data_t *)data;
    ctx_vita->width           = ATTR_VITA_WIDTH;
    ctx_vita->height          = ATTR_VITA_HEIGHT;
-   ctx_vita->native_window   = PSP2_WINDOW_960X544;
+   ctx_vita->native_window   = &win;
    ctx_vita->refresh_rate    = 60;
 
    if (!egl_create_context(&ctx_vita->egl, ctx_attr_list)) {
+      RARCH_WARN("There was an issue creating the context");
       goto error;
    }
 
    if (!egl_create_surface(&ctx_vita->egl, ctx_vita->native_window)) {
+      RARCH_WARN("There was an issue creating the surface: (%x)\n", eglGetError());
       goto error;
    }
 
@@ -111,7 +124,16 @@ static bool vita_suppress_screensaver(void *data, bool enable) { return false; }
 static enum gfx_ctx_api vita_get_api(void *data) { return GFX_CTX_OPENGL_ES_API; }
 
 static bool vita_bind_api(void *data, enum gfx_ctx_api api, unsigned major, unsigned minor) {
-   return (bool)(api == GFX_CTX_OPENGL_ES_API && egl_bind_api(EGL_OPENGL_ES_API));
+   if (api != GFX_CTX_OPENGL_ES_API) {
+      return false;
+   }
+
+   if (egl_bind_api(EGL_OPENGL_ES_API) == EGL_FALSE) {
+      RARCH_WARN("EGL Bind API Error: (%x)\n", eglGetError());
+      return false;
+   }
+
+   return true;
 }
 
 static void vita_show_mouse(void *data, bool state) { }
@@ -122,17 +144,18 @@ static void vita_bind_hw_render(void *data, bool enable) {
 }
 
 static void *vita_init(void *video_driver) {
-   EGLint n;
+   EGLint n = 0;
    EGLint major, minor;
 
    static const EGLint attribs[] = {
-      EGL_RED_SIZE, 8,
-      EGL_GREEN_SIZE, 8,
-      EGL_BLUE_SIZE, 8,
-      EGL_ALPHA_SIZE, 8,
-      EGL_DEPTH_SIZE, 32,
-      EGL_STENCIL_SIZE, 8,
-      EGL_SURFACE_TYPE, 5,
+      EGL_BUFFER_SIZE,     EGL_DONT_CARE,
+      EGL_RED_SIZE,        8,
+      EGL_GREEN_SIZE,      8,
+      EGL_BLUE_SIZE,       8,
+      EGL_ALPHA_SIZE,      8,
+      EGL_STENCIL_SIZE,    8,
+      EGL_DEPTH_SIZE,      16,
+      EGL_SAMPLES,         4,
       EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
       EGL_NONE
    };
@@ -145,7 +168,7 @@ static void *vita_init(void *video_driver) {
 
     if (!egl_init_context(&ctx_vita->egl, EGL_NONE, EGL_DEFAULT_DISPLAY, &major, &minor, &n, attribs, NULL)) {
       egl_report_error();
-      printf("[VITA]: EGL error: %d.\n", eglGetError());
+      RARCH_WARN("[VITA]: EGL error: %x.\n", eglGetError());
       goto error;
     }
 
@@ -183,7 +206,7 @@ const gfx_ctx_driver_t vita_ctx = {
    NULL, /* get_video_output_prev */
    NULL, /* get_video_output_next */
    NULL, /* get_metrics */
-   NULL,
+   NULL, /* translate_aspect */
    NULL, /* update_title */
    vita_check_window,
    NULL, /* set_resize */
@@ -193,13 +216,13 @@ const gfx_ctx_driver_t vita_ctx = {
    vita_swap_buffers,
    vita_input_driver,
    egl_get_proc_address,
-   NULL,
-   NULL,
+   NULL, /* image_buffer_init maybe we support this with IMGEGL*/
+   NULL, /* image_buffer_write */
    vita_show_mouse,
    "vita",
    vita_get_flags,
    vita_set_flags,
    vita_bind_hw_render,
-   NULL,
-   NULL
+   NULL, /* get_context_data */
+   NULL /* make_current */
 };
