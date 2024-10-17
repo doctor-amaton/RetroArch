@@ -5932,7 +5932,6 @@ static void xmb_draw_bg(
          case XMB_SHADER_PIPELINE_SIMPLE_RIBBON:
             draw.pipeline_id = VIDEO_SHADER_MENU_2;
             break;
-#if !defined(VITA)
          case XMB_SHADER_PIPELINE_SIMPLE_SNOW:
             draw.pipeline_id = VIDEO_SHADER_MENU_3;
             break;
@@ -5945,7 +5944,6 @@ static void xmb_draw_bg(
          case XMB_SHADER_PIPELINE_SNOWFLAKE:
             draw.pipeline_id = VIDEO_SHADER_MENU_6;
             break;
-#endif
       }
 
       if (dispctx->draw_pipeline)

@@ -29,6 +29,10 @@
 #endif
 #endif
 
+#ifdef VITA
+#define GL_GLEXT_PROTOTYPES
+#endif
+
 #if defined(DINGUX)
 #include <sys/types.h>
 #include <unistd.h>
@@ -86,6 +90,11 @@
 
 #ifdef EMSCRIPTEN
 #include <emscripten/emscripten.h>
+#endif
+
+#ifdef VITA
+#include <psp2/kernel/modulemgr.h>
+#include <gpu_es4/psp2_pvr_hint.h>
 #endif
 
 #ifdef HAVE_LIBNX
@@ -5837,6 +5846,16 @@ void main_exit(void *args)
  **/
 int rarch_main(int argc, char *argv[], void *data)
 {
+   #ifdef VITA
+   sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
+   sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
+   sceKernelLoadStartModule("app0:libgpu_es4_ext.suprx", 0, NULL, 0, NULL, NULL);
+   sceKernelLoadStartModule("app0:libIMGEGL.suprx", 0, NULL, 0, NULL, NULL);
+
+   PVRSRV_PSP2_APPHINT hint;
+   PVRSRVInitializeAppHint(&hint);
+   PVRSRVCreateVirtualAppHint(&hint);
+   #endif
    struct rarch_state *p_rarch         = &rarch_st;
    runloop_state_t *runloop_st         = runloop_state_get_ptr();
    video_driver_state_t *video_st      = video_state_get_ptr();
