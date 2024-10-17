@@ -13,7 +13,7 @@ PC_DEVELOPMENT_UDP_PORT   =
 
 OBJ :=
 
-SCE_LIBC_SIZE := 4194304
+SCE_LIBC_SIZE := 8388608
 DEFINES := -DHAVE_ONLINE_UPDATER -DHAVE_UPDATE_ASSETS -DHAVE_STB_VORBIS -D__psp2__
 INCDIRS :=
 
@@ -186,14 +186,11 @@ VITA_LIBS := -lSceDisplay_stub \
 	-lpthread \
 	-lpng \
 	-lz \
-	-lSceShaccCg_stub \
-	-ltaihen_stub \
-	-llibGLESv1_CM_stub_weak \
 	-llibGLESv2_stub_weak \
 	-llibgpu_es4_ext_stub_weak \
 	-llibIMGEGL_stub_weak
 
-FSELF_FLAGS := -s
+FSELF_FLAGS := -ss
 LIBS	:= $(WHOLE_START)
 
 ifeq ($(HAVE_STATIC_DUMMY),1)
@@ -245,7 +242,6 @@ $(TARGET).elf: $(OBJ)
 %.vpk: %.self
 	vita-mksfoex -s TITLE_ID=$(VITA_TITLE_ID) "$(VITA_TITLE_NAME)" -d ATTRIBUTE2=12 param.sfo
 	vita-pack-vpk -s param.sfo -b $< $@ \
-		-a deps/PVR_PSP2/lib/libGLESv1_CM.suprx=module/libGLESv1_CM.suprx \
 		-a deps/PVR_PSP2/lib/libGLESv2.suprx=module/libGLESv2.suprx \
 		-a deps/PVR_PSP2/lib/libpvrPSP2_WSEGL.suprx=module/libpvrPSP2_WSEGL.suprx \
 		-a deps/PVR_PSP2/lib/libgpu_es4_ext.suprx=libgpu_es4_ext.suprx \

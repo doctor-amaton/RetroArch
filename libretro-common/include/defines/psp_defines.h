@@ -40,7 +40,6 @@
 #ifdef VITA
 int sceClibPrintf ( const char * format, ... );
 #define printf sceClibPrintf
-#define PSP_DISPLAY_PIXEL_FORMAT_8888 (SCE_DISPLAY_PIXELFORMAT_A8B8G8R8)
 #else
 #define PSP_DISPLAY_PIXEL_FORMAT_8888 (SCE_DISPLAY_PIXELFORMAT_A8B8G8R8)
 #endif
@@ -53,7 +52,7 @@ int sceClibPrintf ( const char * format, ... );
 
 /* Memory left to the system for threads and other internal stuffs */
 #ifdef SCE_LIBC_SIZE
-#define RAM_THRESHOLD 0x2000000 + SCE_LIBC_SIZE
+#define RAM_THRESHOLD 0x8000000 + SCE_LIBC_SIZE
 #else
 #define RAM_THRESHOLD 0x2000000
 #endif
